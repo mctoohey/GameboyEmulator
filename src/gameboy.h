@@ -9,6 +9,7 @@ typedef struct gameboy_t {
     CPU* cpu;
     uint8_t* memory;
     uint8_t* bootstrap_rom;
+    uint8_t int_master_enable;
 } Gameboy;
 
 void gameboy_execute_instruction(Gameboy* gb, uint8_t instruction);

@@ -10,7 +10,7 @@ DEL = rm
 EXECUTABLE = gbc
 # Windows
 ifeq ($(OS),Windows_NT)
-	EXECUTABLE = gbc3.exe
+	EXECUTABLE = gbc.exe
 	DEL = del
 	CFLAGS += -mwindows
 endif

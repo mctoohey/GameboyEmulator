@@ -8,6 +8,14 @@
 #include "logging.h"
 #include "screen.h"
 
+static const uint16_t interrupt_vector[5] = {
+    0x0040,
+    0x0048,
+    0x0050,
+    0x0058,
+    0x0060
+};
+
 uint8_t gameboy_fetch_instruction(Gameboy* gb) {
     return memory_get8(gb, gb->cpu->PC++);
 }
@@ -31,6 +39,29 @@ uint16_t gameboy_pop16(Gameboy* gb) {
     uint16_t value = memory_get16(gb, gb->cpu->SP);
     gb->cpu->SP += 2;
     return value;
+}
+
+
+void gameboy_service_interrupt(Gameboy* gb, uint16_t routine_address) {
+    gameboy_push16(gb, gb->cpu->PC);
+    gb->cpu->PC = routine_address;
+}
+
+
+void gameboy_check_interrupts(Gameboy* gb) {
+    if (!gb->int_master_enable) {
+        return;
+    }
+
+    for (uint8_t i = 0; i < 5; i++) {
+        if (gb->memory[0xFFFF] & gb->memory[0xFF0F] & (1 << i)) {
+            LOG_DEBUG("Interupt %d", i);
+            gb->memory[0xFF0F] &= ~(1 << i);  // Reset
+            gb->int_master_enable = 0;
+            gameboy_service_interrupt(gb, interrupt_vector[i]);
+            break;
+        }
+    }
 }
 
 
@@ -65,10 +96,14 @@ void gameboy_execution_loop(Gameboy* gb) {
 void gameboy_update(Gameboy* gb, uint8_t* frame_buffer) {
     LOG_DEBUG("PC = $%.4x", gb->cpu->PC);
     uint8_t instruction = gameboy_fetch_immediate8(gb);
+    gb->memory[0xFF00] = 0xFF;
     gameboy_execute_instruction(gb, instruction);
 
-    screen_scanline_update(gb->memory, frame_buffer);
+    static uint8_t i = 0;
+    if (i % 50 == 0) screen_scanline_update(gb->memory, frame_buffer);
 
+    gameboy_check_interrupts(gb);
+    i++;
 }
 
 
@@ -1043,11 +1078,13 @@ void gameboy_execute_instruction(Gameboy* gb, uint8_t instruction) {
 
         case DI:
             LOG_INFO("DI");
-            // TODO(mct)
+            // Warning: Timing may be wrong.
+            gb->int_master_enable = 0;
             break;
         case EI:
             LOG_INFO("EI");
-            // TODO(mct)
+            // Warning: Timing may be wrong.
+            gb->int_master_enable = 1;
             break;
 
 
@@ -1229,7 +1266,9 @@ void gameboy_execute_instruction(Gameboy* gb, uint8_t instruction) {
         case RETI:
             LOG_INFO("RETI");
             gb->cpu->PC = gameboy_pop16(gb);
-            // TODO(mct63): Enable interrupts.
+
+            // Warning: Timing may be wrong.
+            gb->int_master_enable = 1;
             break;
 
 

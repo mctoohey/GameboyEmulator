@@ -4,7 +4,7 @@
 
 #include "screen.h"
 
-static const pallet_bitmask_map[4] = {0b00000011, 0b00001100, 0b00110000, 0b11000000};
+static const uint8_t pallet_bitmask_map[4] = {0b00000011, 0b00001100, 0b00110000, 0b11000000};
 
 void screen_update_tiles(uint8_t* gb_memory, uint8_t* frame_buffer) {
     uint16_t tile_data = 0;
@@ -145,7 +145,9 @@ void screen_scanline_update(uint8_t* gb_memory, uint8_t* frame_buffer) {
     if ((lcd_control >> 1) & 0x01) screen_update_sprites(gb_memory, frame_buffer);
 
     gb_memory[0xFF44] = (gb_memory[0xFF44] + 1) % 154;
-    // TODO(mct): V blank interupt.
+
+    // V-blank interupt.
+    if (gb_memory[0xFF44] == 145) gb_memory[0xFF0f] |= 0x01;
 
 
 }
