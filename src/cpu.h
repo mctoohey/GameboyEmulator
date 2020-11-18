@@ -111,4 +111,8 @@ uint8_t cpu_srl_value(CPU* cpu, uint8_t value);
 
 void cpu_test_bit_value(CPU* cpu, uint8_t value, uint8_t n);
 
+
+
+uint8_t cpu_swap_value(CPU* cpu, uint8_t value);
+
 #endif  // SRC_CPU_H_

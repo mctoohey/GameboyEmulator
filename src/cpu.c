@@ -112,8 +112,8 @@ void cpu_add_to_A(CPU* cpu, uint8_t value) {
     uint16_t result = cpu->A + value;
 
     cpu_flag_resetN(cpu);
-    // WARNING: May be incorrect.
-    result & (1 << 4) && !(cpu->A & (1 << 4)) ? cpu_flag_setH(cpu) : cpu_flag_resetH(cpu);
+
+    (cpu->A & 0x0F) + (value & 0x0F) > 0x0F ? cpu_flag_setH(cpu) : cpu_flag_resetH(cpu);
     result >> 8 ? cpu_flag_setC(cpu) : cpu_flag_resetC(cpu);
 
     cpu->A = (uint8_t) result;
@@ -124,8 +124,7 @@ void cpu_addcarry_to_A(CPU* cpu, uint8_t value) {
     uint16_t result = cpu->A + value + cpu_flag_getC(cpu);
 
     cpu_flag_resetN(cpu);
-    // WARNING: May be incorrect.
-    result & (1 << 4) && !(cpu->A & (1 << 4)) ? cpu_flag_setH(cpu) : cpu_flag_resetH(cpu);
+    (cpu->A & 0x0F) + (value & 0x0F) + cpu_flag_getC(cpu) > 0x0F ? cpu_flag_setH(cpu) : cpu_flag_resetH(cpu);
     result >> 8 ? cpu_flag_setC(cpu) : cpu_flag_resetC(cpu);
 
     cpu->A = (uint8_t) result;
@@ -137,20 +136,22 @@ void cpu_subtract_from_A(CPU* cpu, uint8_t value) {
 
     cpu_flag_setN(cpu);
     // WARNING: May be incorrect.
-    result & (1 << 4) && !(cpu->A & (1 << 4)) ? cpu_flag_setH(cpu) : cpu_flag_resetH(cpu);
-    result >> 8 ? cpu_flag_setC(cpu) : cpu_flag_resetC(cpu);
+    (cpu->A & 0x0F) < (value & 0x0F) ? cpu_flag_setH(cpu) : cpu_flag_resetH(cpu);
+    cpu->A < value ? cpu_flag_setC(cpu) : cpu_flag_resetC(cpu);
 
     cpu->A = (uint8_t) result;
     cpu->A ? cpu_flag_resetZ(cpu) : cpu_flag_setZ(cpu);
 }
 
 void cpu_subtractcarry_from_A(CPU* cpu, uint8_t value) {
-    uint16_t result = (1 << 8) + cpu->A - value + cpu_flag_getC(cpu);
+    uint16_t starting = (uint16_t) cpu->A;
+    uint16_t subtracting = ((uint16_t) value) + ((uint16_t) cpu_flag_getC(cpu));
+    uint16_t result = (1 << 8) + starting - subtracting;
 
     cpu_flag_setN(cpu);
     // WARNING: May be incorrect.
-    result & (1 << 4) && !(cpu->A & (1 << 4)) ? cpu_flag_setH(cpu) : cpu_flag_resetH(cpu);
-    result >> 8 ? cpu_flag_setC(cpu) : cpu_flag_resetC(cpu);
+    (starting& 0x0F) < (subtracting & 0x0F) ? cpu_flag_setH(cpu) : cpu_flag_resetH(cpu);
+    starting < subtracting ? cpu_flag_setC(cpu) : cpu_flag_resetC(cpu);
 
     cpu->A = (uint8_t) result;
     cpu->A ? cpu_flag_resetZ(cpu) : cpu_flag_setZ(cpu);
@@ -188,8 +189,8 @@ void cpu_compare_A(CPU* cpu, uint8_t value) {
 
     cpu_flag_setN(cpu);
     // WARNING: May be incorrect.
-    result & (1 << 4) && !(cpu->A & (1 << 4)) ? cpu_flag_setH(cpu) : cpu_flag_resetH(cpu);
-    result >> 8 ? cpu_flag_setC(cpu) : cpu_flag_resetC(cpu);
+    (cpu->A & 0x0F) < (value & 0x0F) ? cpu_flag_setH(cpu) : cpu_flag_resetH(cpu);
+    cpu->A < value ? cpu_flag_setC(cpu) : cpu_flag_resetC(cpu);
 
     ((uint8_t) result) ? cpu_flag_resetZ(cpu) : cpu_flag_setZ(cpu);
 }
@@ -202,7 +203,7 @@ void cpu_increment_A(CPU* cpu) {
     result ? cpu_flag_resetZ(cpu) : cpu_flag_setZ(cpu);
     cpu_flag_resetN(cpu);
     // WARNING: May be incorrect.
-    result & (1 << 4) && !(cpu->A & (1 << 4)) ? cpu_flag_setH(cpu) : cpu_flag_resetH(cpu);
+    (cpu->A & 0x0F) + 1 > 0x0F ? cpu_flag_setH(cpu) : cpu_flag_resetH(cpu);
 
     cpu->A = result;
 }
@@ -213,7 +214,7 @@ void cpu_increment_B(CPU* cpu) {
     result ? cpu_flag_resetZ(cpu) : cpu_flag_setZ(cpu);
     cpu_flag_resetN(cpu);
     // WARNING: May be incorrect.
-    result & (1 << 4) && !(cpu->B & (1 << 4)) ? cpu_flag_setH(cpu) : cpu_flag_resetH(cpu);
+    (cpu->B & 0x0F) + 1 > 0x0F ? cpu_flag_setH(cpu) : cpu_flag_resetH(cpu);
 
     cpu->B = result;
 }
@@ -224,7 +225,7 @@ void cpu_increment_C(CPU* cpu) {
     result ? cpu_flag_resetZ(cpu) : cpu_flag_setZ(cpu);
     cpu_flag_resetN(cpu);
     // WARNING: May be incorrect.
-    result & (1 << 4) && !(cpu->C & (1 << 4)) ? cpu_flag_setH(cpu) : cpu_flag_resetH(cpu);
+    (cpu->C & 0x0F) + 1 > 0x0F ? cpu_flag_setH(cpu) : cpu_flag_resetH(cpu);
 
     cpu->C = result;
 }
@@ -235,7 +236,7 @@ void cpu_increment_D(CPU* cpu) {
     result ? cpu_flag_resetZ(cpu) : cpu_flag_setZ(cpu);
     cpu_flag_resetN(cpu);
     // WARNING: May be incorrect.
-    result & (1 << 4) && !(cpu->D & (1 << 4)) ? cpu_flag_setH(cpu) : cpu_flag_resetH(cpu);
+    (cpu->D & 0x0F) + 1 > 0x0F ? cpu_flag_setH(cpu) : cpu_flag_resetH(cpu);
 
     cpu->D = result;
 }
@@ -246,7 +247,7 @@ void cpu_increment_E(CPU* cpu) {
     result ? cpu_flag_resetZ(cpu) : cpu_flag_setZ(cpu);
     cpu_flag_resetN(cpu);
     // WARNING: May be incorrect.
-    result & (1 << 4) && !(cpu->E & (1 << 4)) ? cpu_flag_setH(cpu) : cpu_flag_resetH(cpu);
+    (cpu->E & 0x0F) + 1 > 0x0F ? cpu_flag_setH(cpu) : cpu_flag_resetH(cpu);
 
     cpu->E = result;
 }
@@ -257,7 +258,7 @@ void cpu_increment_H(CPU* cpu) {
     result ? cpu_flag_resetZ(cpu) : cpu_flag_setZ(cpu);
     cpu_flag_resetN(cpu);
     // WARNING: May be incorrect.
-    result & (1 << 4) && !(cpu->H & (1 << 4)) ? cpu_flag_setH(cpu) : cpu_flag_resetH(cpu);
+    (cpu->H & 0x0F) + 1 > 0x0F ? cpu_flag_setH(cpu) : cpu_flag_resetH(cpu);
 
     cpu->H = result;
 }
@@ -268,7 +269,7 @@ void cpu_increment_L(CPU* cpu) {
     result ? cpu_flag_resetZ(cpu) : cpu_flag_setZ(cpu);
     cpu_flag_resetN(cpu);
     // WARNING: May be incorrect.
-    result & (1 << 4) && !(cpu->L & (1 << 4)) ? cpu_flag_setH(cpu) : cpu_flag_resetH(cpu);
+    (cpu->L & 0x0F) + 1 > 0x0F ? cpu_flag_setH(cpu) : cpu_flag_resetH(cpu);
 
     cpu->L = result;
 }
@@ -279,7 +280,7 @@ uint8_t cpu_increment8_value(CPU* cpu, uint8_t value) {
     result ? cpu_flag_resetZ(cpu) : cpu_flag_setZ(cpu);
     cpu_flag_resetN(cpu);
     // WARNING: May be incorrect.
-    result & (1 << 4) && !(value & (1 << 4)) ? cpu_flag_setH(cpu) : cpu_flag_resetH(cpu);
+    (value & 0x0F) + 1 > 0x0F ? cpu_flag_setH(cpu) : cpu_flag_resetH(cpu);
 
     return result;
 }
@@ -290,7 +291,7 @@ void cpu_decrement_A(CPU* cpu) {
     result ? cpu_flag_resetZ(cpu) : cpu_flag_setZ(cpu);
     cpu_flag_setN(cpu);
     // WARNING: May be incorrect.
-    result & (1 << 4) && !(cpu->A & (1 << 4)) ? cpu_flag_setH(cpu) : cpu_flag_resetH(cpu);
+    (cpu->A & 0x0F) == 0 ? cpu_flag_setH(cpu) : cpu_flag_resetH(cpu);
 
     cpu->A =  result;
 }
@@ -301,7 +302,7 @@ void cpu_decrement_B(CPU* cpu) {
     result ? cpu_flag_resetZ(cpu) : cpu_flag_setZ(cpu);
     cpu_flag_setN(cpu);
     // WARNING: May be incorrect.
-    result & (1 << 4) && !(cpu->B & (1 << 4)) ? cpu_flag_setH(cpu) : cpu_flag_resetH(cpu);
+    (cpu->B & 0x0F) == 0 ? cpu_flag_setH(cpu) : cpu_flag_resetH(cpu);
 
     cpu->B =  result;
 }
@@ -312,7 +313,7 @@ void cpu_decrement_C(CPU* cpu) {
     result ? cpu_flag_resetZ(cpu) : cpu_flag_setZ(cpu);
     cpu_flag_setN(cpu);
     // WARNING: May be incorrect.
-    result & (1 << 4) && !(cpu->C & (1 << 4)) ? cpu_flag_setH(cpu) : cpu_flag_resetH(cpu);
+    (cpu->C & 0x0F) == 0 ? cpu_flag_setH(cpu) : cpu_flag_resetH(cpu);
 
     cpu->C =  result;
 }
@@ -323,7 +324,7 @@ void cpu_decrement_D(CPU* cpu) {
     result ? cpu_flag_resetZ(cpu) : cpu_flag_setZ(cpu);
     cpu_flag_setN(cpu);
     // WARNING: May be incorrect.
-    result & (1 << 4) && !(cpu->D & (1 << 4)) ? cpu_flag_setH(cpu) : cpu_flag_resetH(cpu);
+    (cpu->D & 0x0F) == 0 ? cpu_flag_setH(cpu) : cpu_flag_resetH(cpu);
 
     cpu->D =  result;
 }
@@ -334,7 +335,7 @@ void cpu_decrement_E(CPU* cpu) {
     result ? cpu_flag_resetZ(cpu) : cpu_flag_setZ(cpu);
     cpu_flag_setN(cpu);
     // WARNING: May be incorrect.
-    result & (1 << 4) && !(cpu->E & (1 << 4)) ? cpu_flag_setH(cpu) : cpu_flag_resetH(cpu);
+    (cpu->E & 0x0F) == 0 ? cpu_flag_setH(cpu) : cpu_flag_resetH(cpu);
 
     cpu->E =  result;
 }
@@ -345,7 +346,7 @@ void cpu_decrement_H(CPU* cpu) {
     result ? cpu_flag_resetZ(cpu) : cpu_flag_setZ(cpu);
     cpu_flag_setN(cpu);
     // WARNING: May be incorrect.
-    result & (1 << 4) && !(cpu->H & (1 << 4)) ? cpu_flag_setH(cpu) : cpu_flag_resetH(cpu);
+    (cpu->H & 0x0F) == 0 ? cpu_flag_setH(cpu) : cpu_flag_resetH(cpu);
 
     cpu->H =  result;
 }
@@ -356,7 +357,7 @@ void cpu_decrement_L(CPU* cpu) {
     result ? cpu_flag_resetZ(cpu) : cpu_flag_setZ(cpu);
     cpu_flag_setN(cpu);
     // WARNING: May be incorrect.
-    result & (1 << 4) && !(cpu->L & (1 << 4)) ? cpu_flag_setH(cpu) : cpu_flag_resetH(cpu);
+    (cpu->L & 0x0F) == 0 ? cpu_flag_setH(cpu) : cpu_flag_resetH(cpu);
 
     cpu->L =  result;
 }
@@ -367,7 +368,7 @@ uint8_t cpu_decrement8_value(CPU* cpu, uint8_t value) {
     result ? cpu_flag_resetZ(cpu) : cpu_flag_setZ(cpu);
     cpu_flag_setN(cpu);
     // WARNING: May be incorrect.
-    result & (1 << 4) && !(value & (1 << 4)) ? cpu_flag_setH(cpu) : cpu_flag_resetH(cpu);
+    (value & 0x0F) == 0 ? cpu_flag_setH(cpu) : cpu_flag_resetH(cpu);
 
     return result;
 }
@@ -379,7 +380,7 @@ void cpu_add16_to_HL(CPU* cpu, uint16_t value) {
 
     cpu_flag_resetN(cpu);
     // WARNING: May be incorrect.
-    result & (1 << 12) && !(cpu_get_value_HL(cpu) & (1 << 12)) ? cpu_flag_setH(cpu) :
+    (cpu_get_value_HL(cpu) & 0x0FFF) + (value & 0x0FFF) > 0x0FFF ? cpu_flag_setH(cpu) :
                                                                  cpu_flag_resetH(cpu);
     result >> 16 ? cpu_flag_setC(cpu) : cpu_flag_resetC(cpu);
 
@@ -468,4 +469,15 @@ void cpu_test_bit_value(CPU* cpu, uint8_t value, uint8_t n) {
     (value & (1 << n)) ? cpu_flag_resetZ(cpu) : cpu_flag_setZ(cpu);
     cpu_flag_resetN(cpu);
     cpu_flag_setH(cpu);
+}
+
+
+
+uint8_t cpu_swap_value(CPU* cpu, uint8_t value) {
+    uint8_t result = (value << 4) | (value >> 4);
+    value ? cpu_flag_resetZ(cpu) : cpu_flag_setZ(cpu);
+    cpu_flag_resetN(cpu);
+    cpu_flag_resetH(cpu);
+    cpu_flag_resetC(cpu);
+    return result;
 }

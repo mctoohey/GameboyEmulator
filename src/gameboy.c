@@ -111,6 +111,11 @@ void gameboy_update(Gameboy* gb, uint8_t buttons) {
     gameboy_execute_instruction(gb, instruction);
 
     gameboy_check_interrupts(gb);
+
+    // gb->memory[0xFF05]++;
+    // if (gb->memory[0xFF05] == 0) {
+    //      gb->memory[0xFF0F] |= (1 << 2);
+    // }
 }
 
 
@@ -1345,38 +1350,38 @@ void gameboy_execute_cb_prefix_instruction(Gameboy* gb, uint8_t base) {
         // Swap instructions.
         case SWAP_A:
             LOG_INFO("SWAP A");
-            gb->cpu->A = (gb->cpu->A << 4) | (gb->cpu->A >> 4);
+            gb->cpu->A = cpu_swap_value(gb->cpu, gb->cpu->A);
             break;
         case SWAP_B:
             LOG_INFO("SWAP B");
-            gb->cpu->B = (gb->cpu->B << 4) | (gb->cpu->B >> 4);
+            gb->cpu->B = cpu_swap_value(gb->cpu, gb->cpu->B);
             break;
         case SWAP_C:
             LOG_INFO("SWAP C");
-            gb->cpu->C = (gb->cpu->C << 4) | (gb->cpu->C >> 4);
+            gb->cpu->C = cpu_swap_value(gb->cpu, gb->cpu->C);
             break;
         case SWAP_D:
             LOG_INFO("SWAP D");
-            gb->cpu->D = (gb->cpu->D << 4) | (gb->cpu->D >> 4);
+            gb->cpu->D = cpu_swap_value(gb->cpu, gb->cpu->D);
             break;
         case SWAP_E:
             LOG_INFO("SWAP E");
-            gb->cpu->E = (gb->cpu->E << 4) | (gb->cpu->E >> 4);
+            gb->cpu->E = cpu_swap_value(gb->cpu, gb->cpu->E);
             break;
         case SWAP_H:
             LOG_INFO("SWAP H");
-            gb->cpu->H = (gb->cpu->H << 4) | (gb->cpu->H >> 4);
+            gb->cpu->H = cpu_swap_value(gb->cpu, gb->cpu->H);
             break;
         case SWAP_L:
             LOG_INFO("SWAP L");
-            gb->cpu->L = (gb->cpu->L << 4) | (gb->cpu->L >> 4);
+            gb->cpu->L = cpu_swap_value(gb->cpu, gb->cpu->L);
             break;
 
         case SWAP_HL:
         {
             LOG_INFO("SWAP (HL)");
             uint8_t value = memory_get8(gb, cpu_get_value_HL(gb->cpu));
-            memory_set8(gb, cpu_get_value_HL(gb->cpu), (value << 4) | (value >> 4));
+            memory_set8(gb, cpu_get_value_HL(gb->cpu), cpu_swap_value(gb->cpu, value));
             break;
         }
 

@@ -125,7 +125,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     Gameboy gb = {&cpu, memory, bootstrap_rom, 0};
 
 
-    FILE* rom_fp = fopen("../../ROMS/drmario.gb", "rb");
+    FILE* rom_fp = fopen("../../ROMS/DrMario.gb", "rb");
     FILE* boostrap_fp = fopen("DMG_ROM.bin", "rb");
 
     gameboy_load_rom(&gb, rom_fp);
@@ -207,6 +207,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
         if (i % 2 == 0) {
             screen_scanline_update(gb.memory, render_buffer.pixels);
+        }
+
+        if (i % 50 == 0) {
+            gb.memory[0xFF05]++;
+            if (gb.memory[0xFF05] == 0) {
+                gb.memory[0xFF0F] |= (1 << 2);
+            }
         }
  
         // Render
