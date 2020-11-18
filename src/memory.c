@@ -11,7 +11,12 @@ uint8_t memory_get8(Gameboy* gb, uint16_t address) {
 }
 
 void memory_set8(Gameboy* gb, uint16_t address, uint8_t value) {
-    gb->memory[address] = value;
+    if (address == 0xFF00) {
+        // Prevent buttons being overwritten.
+        gb->memory[address] = (value & 0xF0) | (gb->memory[address] & 0x0F);
+    } else {
+        gb->memory[address] = value;
+    }
 }
 
 uint16_t memory_get16(Gameboy* gb, uint16_t address) {
@@ -23,8 +28,10 @@ uint16_t memory_get16(Gameboy* gb, uint16_t address) {
 }
 
 void memory_set16(Gameboy* gb, uint16_t address, uint16_t value) {
-    gb->memory[address] = value & 0xFF;
-    gb->memory[address+1] = value >> 8;
+    memory_set8(gb, address, value & 0xFF);
+    memory_set8(gb, address+1, value >> 8);
+    // gb->memory[address] = value & 0xFF;
+    // gb->memory[address+1] = value >> 8;
 }
 
 

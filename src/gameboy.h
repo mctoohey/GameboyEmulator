@@ -18,6 +18,7 @@ void gameboy_execute_cb_prefix_instruction(Gameboy* gb, uint8_t base);
 void gameboy_load_bootstrap(Gameboy* gb, FILE* fp);
 void gameboy_load_rom(Gameboy* gb, FILE* fp);
 void gameboy_execution_loop(Gameboy* gb);
-void gameboy_update(Gameboy* gb, uint8_t* frame_buffer);
+void gameboy_update(Gameboy* gb, uint8_t buttons);
+
 
 #endif  // SRC_GAMEBOY_H_

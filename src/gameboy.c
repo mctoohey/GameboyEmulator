@@ -93,17 +93,24 @@ void gameboy_execution_loop(Gameboy* gb) {
 }
 
 
-void gameboy_update(Gameboy* gb, uint8_t* frame_buffer) {
+void gameboy_update(Gameboy* gb, uint8_t buttons) {
     LOG_DEBUG("PC = $%.4x", gb->cpu->PC);
+
+    if (buttons != 0xFF) {
+        gb->memory[0xFF0F] |= (1 << 4);   // Set interrupt
+    }
+
+    if (!(gb->memory[0xFF00] & (1 << 5))) {
+        gb->memory[0xFF00] = (gb->memory[0xFF00] & 0xF0) | (buttons & 0x0F);
+    } else if (!(gb->memory[0xFF00] & (1 << 4))) {
+        gb->memory[0xFF00] = (gb->memory[0xFF00] & 0xF0) | (buttons >> 4);
+    }
+
     uint8_t instruction = gameboy_fetch_immediate8(gb);
-    gb->memory[0xFF00] = 0xFF;
+    // gb->memory[0xFF00] = 0xFF;
     gameboy_execute_instruction(gb, instruction);
 
-    static uint8_t i = 0;
-    if (i % 50 == 0) screen_scanline_update(gb->memory, frame_buffer);
-
     gameboy_check_interrupts(gb);
-    i++;
 }
 
 

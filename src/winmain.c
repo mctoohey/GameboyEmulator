@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 #include "gameboy.h"
+#include "screen.h"
 #include "cpu.h"
 
 #define WIDTH 160
@@ -121,10 +122,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     cpu.PC = 0;
     uint8_t memory[0x10000] = {0};
     uint8_t bootstrap_rom[0x100] = {0};
-    Gameboy gb = {&cpu, memory, bootstrap_rom};
-    
+    Gameboy gb = {&cpu, memory, bootstrap_rom, 0};
 
-    FILE* rom_fp = fopen("../../ROMS/tetris.gb", "rb");
+
+    FILE* rom_fp = fopen("../../ROMS/drmario.gb", "rb");
     FILE* boostrap_fp = fopen("DMG_ROM.bin", "rb");
 
     gameboy_load_rom(&gb, rom_fp);
@@ -140,22 +141,80 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     //     printf("%x, %x\n", bootstrap_rom[0xa8+i], memory[0x104+i]);
 
     HDC hdc = GetDC(window);
+    uint32_t i = 0;
+    uint8_t buttons = 0xFF;
     while (running) {
         // Input
         MSG message;
         while (PeekMessageA(&message, window, 0, 0, PM_REMOVE)) {
-            TranslateMessage(&message);
-            DispatchMessage(&message);
-        }
 
-        // Simulation
-        for (uint8_t i = 0; i < 50; i++) {
-             gameboy_update(&gb, render_buffer.pixels);
+            switch (message.message) {
+                case WM_KEYDOWN:
+                {
+                    uint32_t vk_code = message.wParam;
+                    // printf("down %d\n", vk_code);
+                    if (vk_code == 'S') {
+                        buttons &= ~(1 << 7);
+                    } else if (vk_code == 'W') {
+                        buttons &= ~(1 << 6);
+                    } else if (vk_code == 'A') {
+                        buttons &= ~(1 << 5);
+                    } else if (vk_code == 'D') {
+                        buttons &= ~(1 << 4);
+                    } else if (vk_code == VK_RETURN) {
+                        buttons &= ~(1 << 3);
+                        // printf("down enter %x\n", buttons);
+                    } else if (vk_code == VK_RSHIFT) {
+                        buttons &= ~(1 << 2);
+                    } else if (vk_code == 'E') {
+                        buttons &= ~(1 << 1);
+                    } else if (vk_code == VK_SPACE) {
+                        buttons &= ~(0x01);
+                    }
+                    break;
+                }
+                case WM_KEYUP:
+                {
+                    uint32_t vk_code = message.wParam;
+                    // printf("up\n");
+                    if (vk_code == 'S') {
+                        buttons |= (1 << 7);
+                    } else if (vk_code == 'W') {
+                        buttons |= (1 << 6);
+                    } else if (vk_code == 'A') {
+                        buttons |= (1 << 5);
+                    } else if (vk_code == 'D') {
+                        buttons |= (1 << 4);
+                    } else if (vk_code == VK_RETURN) {
+                        buttons |= (1 << 3);
+                    } else if (vk_code == VK_RSHIFT) {
+                        buttons |= (1 << 2);
+                    } else if (vk_code == 'E') {
+                        buttons |= (1 << 1);
+                    } else if (vk_code == VK_SPACE) {
+                        buttons |= (0x01);
+                    }
+                    break;
+                }
+                default:
+                    TranslateMessage(&message);
+                    DispatchMessage(&message);
+            }
         }
-       
+        // printf("buttons %x\n", buttons);
+        // Simulation
+        gameboy_update(&gb, buttons);
+
+        if (i % 2 == 0) {
+            screen_scanline_update(gb.memory, render_buffer.pixels);
+        }
+ 
         // Render
-        window_render(hdc);
+        if (i % 2000 == 0) {
+            window_render(hdc);
+        }
         // Sleep(100);
+        i++;
     }
     return 0;
 }
