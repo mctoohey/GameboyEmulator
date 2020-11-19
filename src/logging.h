@@ -2,7 +2,7 @@
 #define SRC_LOGGING_H_
 #include <stdio.h>
 
-#define LOGGING_LEVEL 3
+#define LOGGING_LEVEL 0
 
 #if LOGGING_LEVEL >= 1
     #define LOG_ERROR(fmt, ...) printf("[ERROR] " fmt "\n", ##__VA_ARGS__)

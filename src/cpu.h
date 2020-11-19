@@ -55,6 +55,8 @@ void cpu_flag_setH(CPU* cpu);
 void cpu_flag_setC(CPU* cpu);
 
 uint8_t cpu_flag_getZ(CPU* cpu);
+uint8_t cpu_flag_getN(CPU* cpu);
+uint8_t cpu_flag_getH(CPU* cpu);
 uint8_t cpu_flag_getC(CPU* cpu);
 
 
@@ -114,5 +116,9 @@ void cpu_test_bit_value(CPU* cpu, uint8_t value, uint8_t n);
 
 
 uint8_t cpu_swap_value(CPU* cpu, uint8_t value);
+
+
+
+void cpu_daa(CPU* cpu);
 
 #endif  // SRC_CPU_H_

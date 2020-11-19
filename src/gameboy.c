@@ -519,11 +519,16 @@ void gameboy_execute_instruction(Gameboy* gb, uint8_t instruction) {
             break;
 
         case LDHL_SP_d8:
+        {
             LOG_INFO("LD HL,SP+d8");
-            cpu_set_value_HL(gb->cpu, gb->cpu->SP + ((int8_t) gameboy_fetch_immediate8(gb)));
+            uint8_t value = gameboy_fetch_immediate8(gb);
+            (gb->cpu->SP & 0x0F) + (value & 0x0F) > 0x0F ? cpu_flag_setH(gb->cpu) : cpu_flag_resetH(gb->cpu);
+            (gb->cpu->SP & 0xFF) + value > 0xFF ? cpu_flag_setC(gb->cpu) : cpu_flag_resetC(gb->cpu);
+            cpu_set_value_HL(gb->cpu, gb->cpu->SP + ((int8_t) value));
             cpu_flag_resetZ(gb->cpu);
             cpu_flag_resetN(gb->cpu);
             // WARNING: Not sure how H and C flags should behave!
+        }
             break;
 
         case LD_a16_SP:
@@ -993,7 +998,11 @@ void gameboy_execute_instruction(Gameboy* gb, uint8_t instruction) {
 
         case ADD_SP_d8:
             LOG_INFO("ADD SP,d8");
-            gb->cpu->SP += ((int8_t) gameboy_fetch_immediate8(gb));
+            uint8_t value = gameboy_fetch_immediate8(gb);
+            (gb->cpu->SP & 0x0F) + (value & 0x0F) > 0x0F ? cpu_flag_setH(gb->cpu) : cpu_flag_resetH(gb->cpu);
+            (gb->cpu->SP & 0xFF) + value > 0xFF ? cpu_flag_setC(gb->cpu) : cpu_flag_resetC(gb->cpu);
+
+            gb->cpu->SP += (int8_t) value;
             cpu_flag_resetZ(gb->cpu);
             cpu_flag_resetN(gb->cpu);
             // WARNING: Not sure how H and C flags should behave!
@@ -1039,17 +1048,9 @@ void gameboy_execute_instruction(Gameboy* gb, uint8_t instruction) {
 
         // Miscellaneous instructions.
         case DAA:
-        {
             LOG_INFO("DAA");
-            uint8_t first = gb->cpu->A % 10;
-            uint8_t second = (gb->cpu->A / 10) % 10;
-
-            gb->cpu->A = (second << 4) | first;
-            gb->cpu->A ? cpu_flag_resetZ(gb->cpu) : cpu_flag_setZ(gb->cpu);
-            cpu_flag_resetH(gb->cpu);
-            // WARNING: Not sure how C flag should behave.
+            cpu_daa(gb->cpu);
             break;
-        }
 
         case CPL:
             LOG_INFO("CPL");
@@ -1105,18 +1106,22 @@ void gameboy_execute_instruction(Gameboy* gb, uint8_t instruction) {
         case RLCA:
             LOG_INFO("RLCA");
             gb->cpu->A = cpu_rlc_value(gb->cpu, gb->cpu->A);
+            cpu_flag_resetZ(gb->cpu);
             break;
         case RLA:
             LOG_INFO("RLA");
             gb->cpu->A = cpu_rl_value(gb->cpu, gb->cpu->A);
+            cpu_flag_resetZ(gb->cpu);
             break;
         case RRCA:
             LOG_INFO("RRCA");
             gb->cpu->A = cpu_rrc_value(gb->cpu, gb->cpu->A);
+            cpu_flag_resetZ(gb->cpu);
             break;
         case RRA:
             LOG_INFO("RRA");
             gb->cpu->A = cpu_rr_value(gb->cpu, gb->cpu->A);
+            cpu_flag_resetZ(gb->cpu);
             break;
 
 

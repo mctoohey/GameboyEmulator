@@ -19,7 +19,7 @@ uint16_t cpu_get_value_HL(CPU* cpu) {
 
 void cpu_set_value_AF(CPU* cpu, uint16_t value) {
     cpu->A = value >> 8;
-    cpu->F = value & 0xFF;
+    cpu->F = value & 0xF0;  // Can only use top 4 bits.
 }
 
 void cpu_set_value_BC(CPU* cpu, uint16_t value) {
@@ -103,6 +103,14 @@ uint8_t cpu_flag_getZ(CPU* cpu) {
     return (cpu->F >> 7) & 0x01;
 }
 
+uint8_t cpu_flag_getN(CPU* cpu) {
+    return (cpu->F >> 6) & 0x01;
+}
+
+uint8_t cpu_flag_getH(CPU* cpu) {
+    return (cpu->F >> 5) & 0x01;
+}
+
 uint8_t cpu_flag_getC(CPU* cpu) {
     return (cpu->F >> 4) & 0x01;
 }
@@ -144,14 +152,12 @@ void cpu_subtract_from_A(CPU* cpu, uint8_t value) {
 }
 
 void cpu_subtractcarry_from_A(CPU* cpu, uint8_t value) {
-    uint16_t starting = (uint16_t) cpu->A;
-    uint16_t subtracting = ((uint16_t) value) + ((uint16_t) cpu_flag_getC(cpu));
-    uint16_t result = (1 << 8) + starting - subtracting;
+    uint16_t result = (1 << 8) + cpu->A - value - cpu_flag_getC(cpu);
 
     cpu_flag_setN(cpu);
     // WARNING: May be incorrect.
-    (starting& 0x0F) < (subtracting & 0x0F) ? cpu_flag_setH(cpu) : cpu_flag_resetH(cpu);
-    starting < subtracting ? cpu_flag_setC(cpu) : cpu_flag_resetC(cpu);
+    (cpu->A & 0x0F) < (value & 0x0F) + cpu_flag_getC(cpu) ? cpu_flag_setH(cpu) : cpu_flag_resetH(cpu);
+    cpu->A < value + cpu_flag_getC(cpu) ? cpu_flag_setC(cpu) : cpu_flag_resetC(cpu);
 
     cpu->A = (uint8_t) result;
     cpu->A ? cpu_flag_resetZ(cpu) : cpu_flag_setZ(cpu);
@@ -480,4 +486,28 @@ uint8_t cpu_swap_value(CPU* cpu, uint8_t value) {
     cpu_flag_resetH(cpu);
     cpu_flag_resetC(cpu);
     return result;
+}
+
+
+
+void cpu_daa(CPU* cpu) {
+    if (!cpu_flag_getN(cpu)) {
+        if ((cpu->A & 0xF0) > 0x90 || cpu_flag_getC(cpu)) {
+            cpu->A += 0x60;
+            cpu_flag_setC(cpu);
+        }
+        if ((cpu->A & 0x0F) > 0x09 || cpu_flag_getH(cpu)) {
+            cpu->A += 0x06;
+        }
+    } else {
+        if (cpu_flag_getC(cpu)) {
+            cpu->A -= 0x60;
+        }
+        if (cpu_flag_getH(cpu)) {
+            cpu->A -= 0x06;
+        }
+    }
+
+    cpu->A ? cpu_flag_resetZ(cpu) : cpu_flag_setZ(cpu);
+    cpu_flag_resetH(cpu);
 }
