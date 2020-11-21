@@ -102,8 +102,9 @@ HWND window_init(uint32_t width, uint32_t height) {
     // printf("%d %d\n", rect.right - rect.left, rect.bottom - rect.top);
     HWND window =  CreateWindowExA(0, window_class.lpszClassName, "GBC",
                             WS_VISIBLE|WS_CAPTION|WS_MINIMIZEBOX|WS_SYSMENU,
-                            CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, 0, 0, 0, 0);
-    
+                            CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left,
+                            rect.bottom - rect.top, 0, 0, 0, 0);
+
     return window;
 }
 
@@ -125,7 +126,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     Gameboy gb = {&cpu, memory, bootstrap_rom, 0};
 
 
-    FILE* rom_fp = fopen("../../ROMS/DrMario.gb", "rb");
+    FILE* rom_fp = fopen("../../ROMS/drmario.gb", "rb");
     FILE* boostrap_fp = fopen("DMG_ROM.bin", "rb");
 
     gameboy_load_rom(&gb, rom_fp);
@@ -205,7 +206,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         // Simulation
         gameboy_update(&gb, buttons);
 
-        if (i % 2 == 0) {
+        if (i % 5 == 0) {
             screen_scanline_update(gb.memory, render_buffer.pixels);
         }
 
@@ -222,6 +223,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         }
         // Sleep(100);
         i++;
+    }
+    for (uint16_t i = 0xFE00; i <= 0xFE9F; i++) {
+        printf("$%.2x\n", memory[i]);
     }
     return 0;
 }

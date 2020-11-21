@@ -4,6 +4,11 @@
 
 #include "screen.h"
 
+#define WHITE 0
+#define LIGHT_GREY 1
+#define DARK_GREY 2
+#define BLACK 3
+
 static const uint8_t pallet_bitmask_map[4] = {0b00000011, 0b00001100, 0b00110000, 0b11000000};
 
 void screen_update_tiles(uint8_t* gb_memory, uint8_t* frame_buffer) {
@@ -67,7 +72,7 @@ void screen_update_tiles(uint8_t* gb_memory, uint8_t* frame_buffer) {
     uint8_t color_offset;
     uint8_t color_num;
     uint8_t color;
-    
+
     uint8_t y;
     for (uint8_t x = 0; x < 160; x++) {
         if (is_using_window && x >= window_x) {
@@ -95,7 +100,7 @@ void screen_update_tiles(uint8_t* gb_memory, uint8_t* frame_buffer) {
 
         color_offset = 7 - (x_pos % 8);
         color_num = (((data2 >> color_offset) & 0x01) << 1) | ((data1 >> color_offset) & 0x01);
-        
+
         y = gb_memory[0xFF44];
         if (y > 143 || x > 159) {
             continue;
@@ -106,35 +111,104 @@ void screen_update_tiles(uint8_t* gb_memory, uint8_t* frame_buffer) {
         // printf("x = %d, y = %d\n", x, y);
 
         switch (color) {
-            case 0:
+            case WHITE:
                 frame_buffer[3*(y*160+x)] = 255;
                 frame_buffer[3*(y*160+x)+1] = 255;
                 frame_buffer[3*(y*160+x)+2] = 255;
                 break;
-            case 1:
+            case LIGHT_GREY:
                 frame_buffer[3*(y*160+x)] = 170;
                 frame_buffer[3*(y*160+x)+1] = 170;
                 frame_buffer[3*(y*160+x)+2] = 170;
                 break;
-            case 2:
+            case DARK_GREY:
                 frame_buffer[3*(y*160+x)] = 85;
                 frame_buffer[3*(y*160+x)+1] = 85;
                 frame_buffer[3*(y*160+x)+2] = 85;
                 break;
-            case 3:
+            case BLACK:
                 frame_buffer[3*(y*160+x)] = 0;
                 frame_buffer[3*(y*160+x)+1] = 0;
                 frame_buffer[3*(y*160+x)+2] = 0;
                 break;
         }
     }
-
-    
 }
 
 
 void screen_update_sprites(uint8_t* gb_memory, uint8_t* frame_buffer) {
-    
+    uint8_t lcd_control = gb_memory[0xFF40];
+    uint8_t sprite_height = 8;
+
+    if (lcd_control & (1 << 2)) sprite_height = 16;
+
+    for (uint8_t sprite_num = 0; sprite_num < 40; sprite_num++) {
+        uint8_t i = sprite_num*4;
+        uint8_t y_pos = gb_memory[0xFE00+i] - 16;
+        uint8_t x_pos = gb_memory[0xFE00+i+1] - 8;
+        uint8_t tile_location = gb_memory[0xFE00+i+2];
+        uint8_t attributes = gb_memory[0xFE00+i+3];
+
+        uint8_t scanline_pos = gb_memory[0xFF44];
+        // printf("scan, ypos: %d, %d\n", scanline_pos, y_pos);
+        if (scanline_pos >= y_pos && scanline_pos < y_pos+sprite_height) {
+            uint8_t sprite_line = scanline_pos - y_pos;
+
+            if (attributes & (1 << 6)) {
+                sprite_line = sprite_height - sprite_line;
+            }
+
+            uint16_t data_address = 0x8000 + (tile_location * 16) + sprite_line*2;
+            uint8_t data1 = gb_memory[data_address];
+            uint8_t data2 = gb_memory[data_address+1];
+
+            for (int8_t sprite_x = 7; sprite_x >= 0; sprite_x--) {
+                if (attributes & (1 << 5)) {
+                    sprite_x = 7 - sprite_x;
+                }
+
+                uint8_t color_num = (((data2 >> sprite_x) & 0x01) << 1) | ((data1 >> sprite_x) & 0x01);
+                uint16_t pallet_address = attributes & (1 << 4) ? 0xFF49 : 0xFF48;
+                uint8_t color = (pallet_bitmask_map[color_num] & gb_memory[pallet_address]) >> (color_num * 2);
+                
+                if (color == WHITE) {
+                    continue;
+                }
+
+                uint8_t x = x_pos + (7-sprite_x);
+
+                if ((scanline_pos > 143) || x > 159) {
+                    continue;
+                }
+                
+                switch (color) {
+                    case WHITE:
+                        frame_buffer[3*(scanline_pos*160+x)] = 255;
+                        frame_buffer[3*(scanline_pos*160+x)+1] = 255;
+                        frame_buffer[3*(scanline_pos*160+x)+2] = 255;
+                        break;
+                    case LIGHT_GREY:
+                        frame_buffer[3*(scanline_pos*160+x)] = 170;
+                        frame_buffer[3*(scanline_pos*160+x)+1] = 170;
+                        frame_buffer[3*(scanline_pos*160+x)+2] = 170;
+                        break;
+                    case DARK_GREY:
+                        frame_buffer[3*(scanline_pos*160+x)] = 85;
+                        frame_buffer[3*(scanline_pos*160+x)+1] = 85;
+                        frame_buffer[3*(scanline_pos*160+x)+2] = 85;
+                        break;
+                    case BLACK:
+                        frame_buffer[3*(scanline_pos*160+x)] = 0;
+                        frame_buffer[3*(scanline_pos*160+x)+1] = 0;
+                        frame_buffer[3*(scanline_pos*160+x)+2] = 0;
+                        break;
+                }
+
+            }
+
+
+        }
+    }
 }
 
 
