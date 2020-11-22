@@ -171,7 +171,7 @@ void screen_update_sprites(uint8_t* gb_memory, uint8_t* frame_buffer) {
                 uint16_t pallet_address = attributes & (1 << 4) ? 0xFF49 : 0xFF48;
                 uint8_t color = (pallet_bitmask_map[color_num] & gb_memory[pallet_address]) >> (color_num * 2);
                 
-                if (color == WHITE) {
+                if (color_num == WHITE) {
                     continue;
                 }
 
