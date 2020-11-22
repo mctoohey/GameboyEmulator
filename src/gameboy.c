@@ -2526,10 +2526,9 @@ void gameboy_execute_cb_prefix_instruction(Gameboy* gb, uint8_t base) {
             gb->cpu->A = gb->cpu->A & ~(1 << 7);
             break;
 
-        
+
         default:
             LOG_ERROR("Base %x not found for prefix 0xCB.", base);
             exit(1);
-
     }
 }
