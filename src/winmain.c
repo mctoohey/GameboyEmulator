@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <sys\timeb.h>
 
 #include "gameboy.h"
 #include "screen.h"
@@ -126,7 +127,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     Gameboy gb = {&cpu, memory, bootstrap_rom, 0};
 
 
-    FILE* rom_fp = fopen("../../ROMS/drmario.gb", "rb");
+    FILE* rom_fp = fopen("../../ROMS/tetris.gb", "rb");
     FILE* boostrap_fp = fopen("DMG_ROM.bin", "rb");
 
     gameboy_load_rom(&gb, rom_fp);
@@ -204,24 +205,27 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         }
         // printf("buttons %x\n", buttons);
         // Simulation
-        gameboy_update(&gb, buttons);
-
-        if (i % 5 == 0) {
+        for (uint16_t j = 0; j < 154; j++) {
+            for (uint16_t k = 0; k < 456; k++) {
+                gameboy_update(&gb, buttons);
+            }
             screen_scanline_update(gb.memory, render_buffer.pixels);
-        }
-
-        if (i % 100 == 0) {
             gb.memory[0xFF05]++;
             if (gb.memory[0xFF05] == 0) {
                 gb.memory[0xFF0F] |= (1 << 2);
             }
         }
+
+        // if (i % 100 == 0) {
+        //     gb.memory[0xFF05]++;
+        //     if (gb.memory[0xFF05] == 0) {
+        //         gb.memory[0xFF0F] |= (1 << 2);
+        //     }
+        // }
  
         // Render
-        if (i % 2000 == 0) {
-            window_render(hdc);
-        }
-        // Sleep(100);
+        window_render(hdc);
+        Sleep(17);
         i++;
     }
     for (uint16_t i = 0xFE00; i <= 0xFE9F; i++) {
