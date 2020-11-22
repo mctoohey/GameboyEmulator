@@ -210,7 +210,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
             screen_scanline_update(gb.memory, render_buffer.pixels);
         }
 
-        if (i % 50 == 0) {
+        if (i % 100 == 0) {
             gb.memory[0xFF05]++;
             if (gb.memory[0xFF05] == 0) {
                 gb.memory[0xFF0F] |= (1 << 2);
