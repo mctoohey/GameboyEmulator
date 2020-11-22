@@ -127,7 +127,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     Gameboy gb = {&cpu, memory, bootstrap_rom, 0};
 
 
-    FILE* rom_fp = fopen("../../ROMS/tetris.gb", "rb");
+    FILE* rom_fp = fopen("../../ROMS/DrMario.gb", "rb");
     FILE* boostrap_fp = fopen("DMG_ROM.bin", "rb");
 
     gameboy_load_rom(&gb, rom_fp);
@@ -206,7 +206,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         // printf("buttons %x\n", buttons);
         // Simulation
         for (uint16_t j = 0; j < 154; j++) {
-            for (uint16_t k = 0; k < 456; k++) {
+            for (uint16_t k = 0; k < 228; k++) {
                 gameboy_update(&gb, buttons);
             }
             screen_scanline_update(gb.memory, render_buffer.pixels);
