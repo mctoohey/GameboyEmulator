@@ -20,6 +20,13 @@ static const uint16_t interrupt_vector[5] = {
     0x0060
 };
 
+static const uint16_t timer_thresholds[4] = {
+    CPU_FREQUENCY/4096,
+    CPU_FREQUENCY/262144,
+    CPU_FREQUENCY/65536,
+    CPU_FREQUENCY/16384,
+};
+
 uint8_t gameboy_fetch_instruction(Gameboy* gb) {
     return memory_get8(gb, gb->cpu->PC++);
 }
@@ -110,6 +117,10 @@ void gameboy_update_buttons(Gameboy* gb, uint8_t buttons) {
     }
 }
 
+// void gameboy_update_timer(Gameboy* gb) {
+
+// }
+
 
 void gameboy_update(Gameboy* gb) {
     LOG_DEBUG("PC = $%.4x", gb->cpu->PC);
@@ -121,6 +132,7 @@ void gameboy_update(Gameboy* gb) {
 }
 
 void gameboy_single_frame_update(Gameboy* gb, uint8_t buttons, uint8_t* frame_buffer) {
+
     for (uint16_t j = 0; j < 154; j++) {
         uint32_t cycles = 0;
 
@@ -128,17 +140,32 @@ void gameboy_single_frame_update(Gameboy* gb, uint8_t buttons, uint8_t* frame_bu
             gameboy_update_buttons(gb, buttons);  // TODO(mct): Remove
 
             uint8_t instruction = gameboy_fetch_immediate8(gb);
-            cycles += gameboy_execute_instruction(gb, instruction);
+            uint8_t instruction_cycles = gameboy_execute_instruction(gb, instruction);
+            cycles += instruction_cycles;
+            gb->timer_counter += instruction_cycles;
+            gb->divider_counter += instruction_cycles;
+
+            // Update timer.
+            if (gb->timer_counter >= timer_thresholds[gb->memory[0xFF07]]) {
+                gb->memory[0xFF05]++;
+                if (gb->memory[0xFF05] == 0) {
+                    gb->memory[0xFF0F] |= (1 << 2);     // Trigger Interrupt.
+                    gb->memory[0xFF05] = gb->memory[0xFF06];
+                }
+                gb->timer_counter = 0;
+            }
+
+            // Update divider register.
+            if (gb->divider_counter >= CPU_FREQUENCY/16382) {
+                gb->memory[0xFF04]++;
+                gb->divider_counter = 0;
+            }
 
             gameboy_check_interrupts(gb);
+
+
         }
         screen_scanline_update(gb->memory, frame_buffer);
-        gb->memory[0xFF04]++;
-        gb->memory[0xFF05]++;
-        if (gb->memory[0xFF05] == 0) {
-            gb->memory[0xFF0F] |= (1 << 2);
-            gb->memory[0xFF05] = gb->memory[0xFF06];
-        }
     }
 }
 

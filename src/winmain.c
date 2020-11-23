@@ -115,7 +115,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     cpu.PC = 0;
     uint8_t memory[0x10000] = {0};
     uint8_t bootstrap_rom[0x100] = {0};
-    Gameboy gb = {&cpu, memory, bootstrap_rom, 0};
+    Gameboy gb = {&cpu, memory, bootstrap_rom, 0, 0, 0};
 
 
     FILE* rom_fp = fopen("../../ROMS/DrMario.gb", "rb");

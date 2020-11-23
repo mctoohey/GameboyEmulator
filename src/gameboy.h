@@ -10,6 +10,9 @@ typedef struct gameboy_t {
     uint8_t* memory;
     uint8_t* bootstrap_rom;
     uint8_t int_master_enable;
+
+    uint32_t timer_counter;
+    uint32_t divider_counter;
 } Gameboy;
 
 uint8_t gameboy_execute_instruction(Gameboy* gb, uint8_t instruction);
