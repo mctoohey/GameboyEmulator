@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#define CPU_FREQUENCY 4194304
+
 typedef struct cpu_t {
     uint8_t A;
     uint8_t F;

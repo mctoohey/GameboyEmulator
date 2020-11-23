@@ -192,19 +192,20 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         }
         printf("buttons %x\n", buttons);
         // Simulation
-        for (uint16_t j = 0; j < 154; j++) {
-            for (uint16_t k = 0; k < 228; k++) {
-                gameboy_update_buttons(&gb, buttons);
-                gameboy_update(&gb);
-            }
-            screen_scanline_update(gb.memory, render_buffer.pixels);
-            gb.memory[0xFF04]++;
-            gb.memory[0xFF05]++;
-            if (gb.memory[0xFF05] == 0) {
-                gb.memory[0xFF0F] |= (1 << 2);
-                gb.memory[0xFF05] = gb.memory[0xFF06];
-            }
-        }
+        // for (uint16_t j = 0; j < 154; j++) {
+        //     for (uint16_t k = 0; k < 228; k++) {
+        //         gameboy_update_buttons(&gb, buttons);
+        //         gameboy_update(&gb);
+        //     }
+        //     screen_scanline_update(gb.memory, render_buffer.pixels);
+        //     gb.memory[0xFF04]++;
+        //     gb.memory[0xFF05]++;
+        //     if (gb.memory[0xFF05] == 0) {
+        //         gb.memory[0xFF0F] |= (1 << 2);
+        //         gb.memory[0xFF05] = gb.memory[0xFF06];
+        //     }
+        // }
+        gameboy_single_frame_update(&gb, buttons, render_buffer.pixels);
 
         // if (i % 100 == 0) {
         //     gb.memory[0xFF05]++;
@@ -215,7 +216,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
         // Render
         window_render(hdc);
-        Sleep(17);
+        Sleep(12);
         i++;
     }
     for (uint16_t i = 0xFE00; i <= 0xFE9F; i++) {

@@ -8,6 +8,10 @@
 #include "logging.h"
 #include "screen.h"
 
+
+#define CYCLES_PER_FRAME CPU_FREQUENCY/60
+#define CYCLES_PER_LINE CYCLES_PER_FRAME/154
+
 static const uint16_t interrupt_vector[5] = {
     0x0040,
     0x0048,
@@ -114,6 +118,28 @@ void gameboy_update(Gameboy* gb) {
     gameboy_execute_instruction(gb, instruction);
 
     gameboy_check_interrupts(gb);
+}
+
+void gameboy_single_frame_update(Gameboy* gb, uint8_t buttons, uint8_t* frame_buffer) {
+    for (uint16_t j = 0; j < 154; j++) {
+        uint32_t cycles = 0;
+
+        while (cycles < CYCLES_PER_LINE) {
+            gameboy_update_buttons(gb, buttons);  // TODO(mct): Remove
+
+            uint8_t instruction = gameboy_fetch_immediate8(gb);
+            cycles += gameboy_execute_instruction(gb, instruction);
+
+            gameboy_check_interrupts(gb);
+        }
+        screen_scanline_update(gb->memory, frame_buffer);
+        gb->memory[0xFF04]++;
+        gb->memory[0xFF05]++;
+        if (gb->memory[0xFF05] == 0) {
+            gb->memory[0xFF0F] |= (1 << 2);
+            gb->memory[0xFF05] = gb->memory[0xFF06];
+        }
+    }
 }
 
 

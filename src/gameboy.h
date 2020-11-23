@@ -20,6 +20,7 @@ void gameboy_load_rom(Gameboy* gb, FILE* fp);
 void gameboy_execution_loop(Gameboy* gb);
 void gameboy_update_buttons(Gameboy* gb, uint8_t buttons);
 void gameboy_update(Gameboy* gb);
+void gameboy_single_frame_update(Gameboy* gb, uint8_t buttons, uint8_t* frame_buffer);
 
 
 #endif  // SRC_GAMEBOY_H_
