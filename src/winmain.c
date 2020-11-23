@@ -132,9 +132,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     // for (int i = 0; i < 30; i++)
     //     printf("%x, %x\n", bootstrap_rom[0xa8+i], memory[0x104+i]);
 
+    LARGE_INTEGER frequency;
+    LARGE_INTEGER t1, t2;
+
+    QueryPerformanceFrequency(&frequency);
+
     HDC hdc = GetDC(window);
     uint32_t i = 0;
     uint8_t buttons = 0xFF;
+    QueryPerformanceCounter(&t1);
     while (running) {
         // Input
         MSG message;
@@ -190,7 +196,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                     DispatchMessage(&message);
             }
         }
-        printf("buttons %x\n", buttons);
+        // printf("buttons %x\n", buttons);
         // Simulation
         // for (uint16_t j = 0; j < 154; j++) {
         //     for (uint16_t k = 0; k < 228; k++) {
@@ -205,7 +211,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         //         gb.memory[0xFF05] = gb.memory[0xFF06];
         //     }
         // }
-        gameboy_single_frame_update(&gb, buttons, render_buffer.pixels);
+        QueryPerformanceCounter(&t2);
+
+        if ((((t2.QuadPart - t1.QuadPart) * 1000.0) / frequency.QuadPart) > 15) {
+            QueryPerformanceCounter(&t1);
+            gameboy_single_frame_update(&gb, buttons, render_buffer.pixels);
+
+            // Render
+            window_render(hdc);
+        }
 
         // if (i % 100 == 0) {
         //     gb.memory[0xFF05]++;
@@ -214,9 +228,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         //     }
         // }
 
-        // Render
-        window_render(hdc);
-        Sleep(12);
+        
+        // QueryPerformanceCounter(&t2);
+        // printf("time passed: %lf\n", ((t2.QuadPart - t1.QuadPart) * 1000.0) / frequency.QuadPart);
+        // Sleep(16);
         i++;
     }
     for (uint16_t i = 0xFE00; i <= 0xFE9F; i++) {
