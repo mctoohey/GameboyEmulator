@@ -93,9 +93,8 @@ void gameboy_execution_loop(Gameboy* gb) {
 }
 
 
-void gameboy_update(Gameboy* gb, uint8_t buttons) {
-    LOG_DEBUG("PC = $%.4x", gb->cpu->PC);
-
+void gameboy_update_buttons(Gameboy* gb, uint8_t buttons) {
+    // TODO(mct): Only trigger interrupt on change in edge (hi to low).
     if (buttons != 0xFF) {
         gb->memory[0xFF0F] |= (1 << 4);   // Set interrupt
     }
@@ -105,17 +104,16 @@ void gameboy_update(Gameboy* gb, uint8_t buttons) {
     } else if (!(gb->memory[0xFF00] & (1 << 4))) {
         gb->memory[0xFF00] = (gb->memory[0xFF00] & 0xF0) | (buttons >> 4);
     }
+}
+
+
+void gameboy_update(Gameboy* gb) {
+    LOG_DEBUG("PC = $%.4x", gb->cpu->PC);
 
     uint8_t instruction = gameboy_fetch_immediate8(gb);
-    // gb->memory[0xFF00] = 0xFF;
     gameboy_execute_instruction(gb, instruction);
 
     gameboy_check_interrupts(gb);
-
-    // gb->memory[0xFF05]++;
-    // if (gb->memory[0xFF05] == 0) {
-    //      gb->memory[0xFF0F] |= (1 << 2);
-    // }
 }
 
 

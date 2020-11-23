@@ -92,7 +92,6 @@ HWND window_init(uint32_t width, uint32_t height) {
     rect.right = width*SCALE;
     rect.bottom = height*SCALE;
     AdjustWindowRectEx(&rect, WS_VISIBLE|WS_CAPTION|WS_MINIMIZEBOX|WS_SYSMENU, FALSE, 0);
-    // printf("%d %d\n", rect.right - rect.left, rect.bottom - rect.top);
     HWND window =  CreateWindowExA(0, window_class.lpszClassName, "GBC",
                             WS_VISIBLE|WS_CAPTION|WS_MINIMIZEBOX|WS_SYSMENU,
                             CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left,
@@ -102,9 +101,9 @@ HWND window_init(uint32_t width, uint32_t height) {
 }
 
 void window_render(HDC hdc) {
-    StretchDIBits(hdc, 0, 0, render_buffer.width*SCALE, render_buffer.height*SCALE, 0, render_buffer.height,
-                    render_buffer.width, -render_buffer.height, render_buffer.pixels,
-                    &render_buffer.bitmap_info, DIB_RGB_COLORS, SRCCOPY);
+    StretchDIBits(hdc, 0, 0, render_buffer.width*SCALE, render_buffer.height*SCALE, 0,
+                    render_buffer.height, render_buffer.width, -render_buffer.height,
+                    render_buffer.pixels, &render_buffer.bitmap_info, DIB_RGB_COLORS, SRCCOPY);
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd) {
@@ -127,7 +126,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     fclose(rom_fp);
     fclose(boostrap_fp);
-    // memory[0xFF44] = 0x90;
 
     // for (int i = 0; i < 1000000; i++) gameboy_update(&gb, render_buffer.pixels);
 
@@ -141,12 +139,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         // Input
         MSG message;
         while (PeekMessageA(&message, window, 0, 0, PM_REMOVE)) {
-
             switch (message.message) {
                 case WM_KEYDOWN:
                 {
                     uint32_t vk_code = message.wParam;
-                    // printf("down %d\n", vk_code);
                     if (vk_code == 'S') {
                         buttons &= ~(1 << 7);
                     } else if (vk_code == 'W') {
@@ -157,7 +153,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                         buttons &= ~(1 << 4);
                     } else if (vk_code == VK_RETURN) {
                         buttons &= ~(1 << 3);
-                        // printf("down enter %x\n", buttons);
                     } else if (vk_code == VK_RSHIFT) {
                         buttons &= ~(1 << 2);
                     } else if (vk_code == 'E') {
@@ -195,11 +190,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                     DispatchMessage(&message);
             }
         }
-        // printf("buttons %x\n", buttons);
+        printf("buttons %x\n", buttons);
         // Simulation
         for (uint16_t j = 0; j < 154; j++) {
             for (uint16_t k = 0; k < 228; k++) {
-                gameboy_update(&gb, buttons);
+                gameboy_update_buttons(&gb, buttons);
+                gameboy_update(&gb);
             }
             screen_scanline_update(gb.memory, render_buffer.pixels);
             gb.memory[0xFF04]++;
@@ -216,7 +212,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         //         gb.memory[0xFF0F] |= (1 << 2);
         //     }
         // }
- 
+
         // Render
         window_render(hdc);
         Sleep(17);
