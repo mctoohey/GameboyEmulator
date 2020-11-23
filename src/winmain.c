@@ -10,6 +10,8 @@
 #define WIDTH 160
 #define HEIGHT 144
 
+#define SCALE 2
+
 typedef struct {
     uint16_t width, height;
     uint8_t *pixels;
@@ -47,16 +49,6 @@ LRESULT CALLBACK window_callback(
             render_buffer.pixels = VirtualAlloc(0,
                                     sizeof(uint8_t)*render_buffer.width*render_buffer.height*3,
                                     MEM_COMMIT|MEM_RESERVE, PAGE_READWRITE);
-
-            // Testing
-            // uint32_t i = 0;
-            // for (uint32_t y = 0; y < render_buffer.height; y++) {
-            //     for (uint32_t x = 0; x < render_buffer.width; x++) {
-            //         render_buffer.pixels[i] = 0xFF;
-            //         render_buffer.pixels[i+2] = 0xFF;
-            //         i += 3;
-            //     }
-            // }
 
             break;
         }
@@ -97,8 +89,8 @@ HWND window_init(uint32_t width, uint32_t height) {
     RECT rect;
     rect.left = 0;
     rect.top = 0;
-    rect.right = width;
-    rect.bottom = height;
+    rect.right = width*SCALE;
+    rect.bottom = height*SCALE;
     AdjustWindowRectEx(&rect, WS_VISIBLE|WS_CAPTION|WS_MINIMIZEBOX|WS_SYSMENU, FALSE, 0);
     // printf("%d %d\n", rect.right - rect.left, rect.bottom - rect.top);
     HWND window =  CreateWindowExA(0, window_class.lpszClassName, "GBC",
@@ -110,7 +102,7 @@ HWND window_init(uint32_t width, uint32_t height) {
 }
 
 void window_render(HDC hdc) {
-    StretchDIBits(hdc, 0, 0, render_buffer.width, render_buffer.height, 0, render_buffer.height,
+    StretchDIBits(hdc, 0, 0, render_buffer.width*SCALE, render_buffer.height*SCALE, 0, render_buffer.height,
                     render_buffer.width, -render_buffer.height, render_buffer.pixels,
                     &render_buffer.bitmap_info, DIB_RGB_COLORS, SRCCOPY);
 }
@@ -127,7 +119,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     Gameboy gb = {&cpu, memory, bootstrap_rom, 0};
 
 
-    FILE* rom_fp = fopen("../../ROMS/drmario.gb", "rb");
+    FILE* rom_fp = fopen("../../ROMS/DrMario.gb", "rb");
     FILE* boostrap_fp = fopen("DMG_ROM.bin", "rb");
 
     gameboy_load_rom(&gb, rom_fp);
