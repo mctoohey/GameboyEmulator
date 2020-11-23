@@ -12,8 +12,8 @@ typedef struct gameboy_t {
     uint8_t int_master_enable;
 } Gameboy;
 
-void gameboy_execute_instruction(Gameboy* gb, uint8_t instruction);
-void gameboy_execute_cb_prefix_instruction(Gameboy* gb, uint8_t base);
+uint8_t gameboy_execute_instruction(Gameboy* gb, uint8_t instruction);
+uint8_t gameboy_execute_cb_prefix_instruction(Gameboy* gb, uint8_t base);
 
 void gameboy_load_bootstrap(Gameboy* gb, FILE* fp);
 void gameboy_load_rom(Gameboy* gb, FILE* fp);
