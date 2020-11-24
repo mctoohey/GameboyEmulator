@@ -118,7 +118,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     Gameboy gb = {&cpu, memory, bootstrap_rom, 0, 0, 0};
 
 
-    FILE* rom_fp = fopen("../../ROMS/DrMario.gb", "rb");
+    FILE* rom_fp = fopen("../../ROMS/tetris.gb", "rb");
     FILE* boostrap_fp = fopen("DMG_ROM.bin", "rb");
 
     gameboy_load_rom(&gb, rom_fp);

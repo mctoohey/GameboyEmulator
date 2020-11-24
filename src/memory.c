@@ -19,11 +19,9 @@ uint8_t memory_get8(Gameboy* gb, uint16_t address) {
 }
 
 void memory_set8(Gameboy* gb, uint16_t address, uint8_t value) {
-    // if (address >=0xFE00 && address <= 0xFE9F) {
-    //     printf("yay? address: 0x%.4x value: $%.2x\n", address, value);
-    // }
-
-    if (address == 0xFF00) {
+    if (address < 0x8000) {
+        return;
+    } else if (address == 0xFF00) {
         // Prevent buttons being overwritten.
         gb->memory[address] = (value & 0xF0) | (gb->memory[address] & 0x0F);
     } else if (address == 0xFF46) {
