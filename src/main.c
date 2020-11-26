@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdint.h>
+
+#include "cpu.h"
 #include "gameboy.h"
 
 int main(void) {

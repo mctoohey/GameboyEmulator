@@ -1,5 +1,7 @@
-#include <stdint.h>
 #include "memory.h"
+
+#include <stdint.h>
+
 #include "gameboy.h"
 
 void memory_dma_transfer(Gameboy* gb, uint8_t value) {

@@ -4,7 +4,6 @@
 #include <sys\timeb.h>
 
 #include "gameboy.h"
-#include "screen.h"
 #include "cpu.h"
 
 #define WIDTH 160
@@ -118,7 +117,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     Gameboy gb = {&cpu, memory, bootstrap_rom, 0, 0, 0};
 
 
-    FILE* rom_fp = fopen("../../ROMS/tetris.gb", "rb");
+    FILE* rom_fp = fopen("../ROMS/drmario.gb", "rb");
     FILE* boostrap_fp = fopen("DMG_ROM.bin", "rb");
 
     gameboy_load_rom(&gb, rom_fp);
@@ -213,7 +212,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         // }
         QueryPerformanceCounter(&t2);
 
-        if ((((t2.QuadPart - t1.QuadPart) * 1000.0) / frequency.QuadPart) > 15) {
+        if ((((t2.QuadPart - t1.QuadPart) * 1000.0) / frequency.QuadPart) > 45) {
             QueryPerformanceCounter(&t1);
             gameboy_single_frame_update(&gb, buttons, render_buffer.pixels);
 

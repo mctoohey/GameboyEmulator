@@ -1,11 +1,13 @@
+#include "gameboy.h"
+
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "instructions.h"
+
 #include "cpu.h"
-#include "gameboy.h"
-#include "memory.h"
+#include "instructions.h"
 #include "logging.h"
+#include "memory.h"
 #include "screen.h"
 
 
