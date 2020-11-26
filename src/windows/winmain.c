@@ -212,7 +212,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         // }
         QueryPerformanceCounter(&t2);
 
-        if ((((t2.QuadPart - t1.QuadPart) * 1000.0) / frequency.QuadPart) > 45) {
+        if ((((t2.QuadPart - t1.QuadPart) * 1000.0) / frequency.QuadPart) > 15) {
             QueryPerformanceCounter(&t1);
             gameboy_single_frame_update(&gb, buttons, render_buffer.pixels);
 
