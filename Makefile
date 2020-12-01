@@ -30,7 +30,7 @@ endif
 
 
 # Default target.
-all: $(BIN_DIR)/$(EXECUTABLE)
+all: $(BIN_DIR)/$(EXECUTABLE) $(BIN_DIR)/DMG_ROM.bin
 
 
 # Compile: create object files from C source files.
@@ -56,6 +56,10 @@ $(OBJ_DIR)/screen.o: $(COMMON_DIR)/screen.c $(COMMON_DIR)/screen.h
 # Link
 $(BIN_DIR)/$(EXECUTABLE): $(OBJ_DIR)/$(MAIN).o $(OBJ_DIR)/gameboy.o $(OBJ_DIR)/cpu.o $(OBJ_DIR)/memory.o $(OBJ_DIR)/screen.o
 	$(CC) $(CFLAGS) $^ -o $@ -lm
+
+# Copy bootloader rom.
+$(BIN_DIR)/DMG_ROM.bin: DMG_ROM.bin
+	copy DMG_ROM.bin build\bin
 
 
 # Target: clean project.

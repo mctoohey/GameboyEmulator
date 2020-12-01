@@ -108,7 +108,10 @@ void window_render(HDC hdc) {
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd) {
     HWND window = window_init(WIDTH, HEIGHT);
     window_render_buffer_init(WIDTH, HEIGHT);
-    printf("hi\n");
+
+    int num_args;
+    LPWSTR* argv = CommandLineToArgvW(lpCmdLine, &num_args);
+
 
     CPU cpu;
     cpu.PC = 0;
@@ -116,9 +119,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     uint8_t bootstrap_rom[0x100] = {0};
     Gameboy gb = {&cpu, memory, bootstrap_rom, 0, 0, 0};
 
-
     FILE* rom_fp = fopen("../ROMS/drmario.gb", "rb");
-    FILE* boostrap_fp = fopen("DMG_ROM.bin", "rb");
+    if (num_args == 1) {
+        rom_fp = fopen(argv[0], "rb");
+    }
+    FILE* boostrap_fp = fopen("./DMG_ROM.bin", "rb");
 
     gameboy_load_rom(&gb, rom_fp);
     gameboy_load_bootstrap(&gb, boostrap_fp);
