@@ -14,6 +14,8 @@
 #define CYCLES_PER_FRAME CPU_FREQUENCY/60
 #define CYCLES_PER_LINE CYCLES_PER_FRAME/154
 
+#define BYTES_PER_BANK 0x4000
+
 static const uint16_t interrupt_vector[5] = {
     0x0040,
     0x0048,
@@ -41,8 +43,14 @@ Gameboy* gameboy_create(void) {
 
     gb->memory = malloc(0x10000);
     gb->bootstrap_rom = malloc(0x100);
-    gb->cartridge_rom = malloc(0x8000);
+    gb->ram_banks = malloc(0x8000);
+    gb->cartridge_rom = NULL;
 
+    gb->mbc_type = ROM_ONLY;
+    gb->ram_bank_writable = 0;
+    gb->current_cartridge_bank = 1;
+    gb->doing_rom_banking = 1;
+    gb->current_ram_bank = 0;
     gb->int_master_enable = 0;
     gb->timer_counter = 0;
     gb->divider_counter = 0;
@@ -118,7 +126,68 @@ void gameboy_load_bootstrap(Gameboy* gb, FILE* fp) {
 
 
 void gameboy_load_rom(Gameboy* gb, FILE* fp) {
-    fread(gb->memory, 1, 0x8000, fp);
+    free(gb->cartridge_rom);
+    gb->cartridge_rom = malloc(0x8000);
+    fread(gb->cartridge_rom, 1, 0x8000, fp);
+
+    uint32_t rom_size;
+    switch (gb->cartridge_rom[0x148]) {
+        case 0x00:
+            rom_size = 2*BYTES_PER_BANK;
+            break;
+        case 0x01:
+            rom_size = 4*BYTES_PER_BANK;
+            break;
+        case 0x02:
+            rom_size = 8*BYTES_PER_BANK;
+            break;
+        case 0x03:
+            rom_size = 16*BYTES_PER_BANK;
+            break;
+        case 0x04:
+            rom_size = 32*BYTES_PER_BANK;
+            break;
+        case 0x05:
+            rom_size = 64*BYTES_PER_BANK;
+            break;
+        case 0x06:
+            rom_size = 128*BYTES_PER_BANK;
+            break;
+        case 0x52:
+            rom_size = 72*BYTES_PER_BANK;
+            break;
+        case 0x53:
+            rom_size = 80*BYTES_PER_BANK;
+            break;
+        case 0x54:
+            rom_size = 96*BYTES_PER_BANK;
+            break;
+        default:
+            LOG_ERROR("Invalid ROM size 0x%.2X", gb->cartridge_rom[0x148]);
+            exit(1);
+    }
+
+    gb->cartridge_rom = realloc(gb->cartridge_rom, rom_size);
+    fread(gb->cartridge_rom+0x8000, 1, rom_size-0x8000, fp);
+
+    switch (gb->cartridge_rom[0x147]) {
+        case 0x00:
+            gb->mbc_type = ROM_ONLY;
+            break;
+        case 0x01:
+        case 0x02:
+        case 0x03:
+            gb->mbc_type = MBC1;
+            break;
+        case 0x05:
+        case 0x06:
+            gb->mbc_type = MBC2;
+            break;
+        default:
+            LOG_ERROR("Cartridge type 0x%.2X not implemented or not valid.", gb->cartridge_rom[0x147]);
+            exit(1);
+
+    }
 }
 
 
@@ -663,7 +732,10 @@ uint8_t gameboy_execute_instruction(Gameboy* gb, uint8_t instruction) {
 
         case LDH_A_a8:
             LOG_INFO("LDH A,(a8)");
-            gb->cpu->A = memory_get8(gb, 0xFF00 | gameboy_fetch_immediate8(gb));
+            uint16_t address = 0xFF00 | gameboy_fetch_immediate8(gb);
+            LOG_DEBUG("Address = 0x%.4X", address);
+            gb->cpu->A = memory_get8(gb, address);
+            LOG_DEBUG("A = $%.2x", gb->cpu->A);
             cycles = 12;
             break;
 
@@ -1156,10 +1228,15 @@ uint8_t gameboy_execute_instruction(Gameboy* gb, uint8_t instruction) {
             break;
 
         case CP_A_d8:
+        {
             LOG_INFO("CP A,d8");
-            cpu_compare_A(gb->cpu, gameboy_fetch_immediate8(gb));
+            LOG_DEBUG("A = $%.2x", gb->cpu->A);
+            uint8_t value = gameboy_fetch_immediate8(gb);
+            LOG_DEBUG("d8 = $%.2x", value);
+            cpu_compare_A(gb->cpu, value);
             cycles = 8;
             break;
+        }
 
         // 8 bit Increment instructions.
         case INC_A:

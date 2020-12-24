@@ -4,12 +4,21 @@
 #include <stdint.h>
 #include <stdio.h>
 #include "cpu.h"
+#include "mbc_struct.h"
 
 typedef struct gameboy_t {
     CPU* cpu;
     uint8_t* memory;
+    uint8_t* ram_banks;
     uint8_t* bootstrap_rom;
     uint8_t* cartridge_rom;
+    uint8_t current_cartridge_bank;
+    uint8_t current_ram_bank;
+
+    enum MBCType mbc_type;
+    uint8_t ram_bank_writable;
+    uint8_t doing_rom_banking;
+
     uint8_t int_master_enable;
 
     uint32_t timer_counter;

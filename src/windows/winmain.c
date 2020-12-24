@@ -119,7 +119,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     // uint8_t bootstrap_rom[0x100] = {0};
     Gameboy* gb = gameboy_create();
 
-    FILE* rom_fp = fopen("../ROMS/drmario.gb", "rb");
+    FILE* rom_fp = fopen("../ROMS/supermarioland.gb", "rb");
     if (num_args == 1) {
         rom_fp = fopen((char*) argv[0], "rb");
     }
