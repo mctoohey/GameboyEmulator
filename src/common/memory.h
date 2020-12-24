@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include "gameboy.h"
 
+
+
 uint8_t memory_get8(Gameboy* gb, uint16_t address);
 
 void memory_set8(Gameboy* gb, uint16_t address, uint8_t value);

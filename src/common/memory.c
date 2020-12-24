@@ -4,6 +4,7 @@
 
 #include "gameboy.h"
 
+
 void memory_dma_transfer(Gameboy* gb, uint8_t value) {
     uint16_t address = value << 8;
     for (uint8_t i = 0; i < 0xA0; i++) {

@@ -110,23 +110,23 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     window_render_buffer_init(WIDTH, HEIGHT);
 
     int num_args;
-    LPWSTR* argv = CommandLineToArgvW(lpCmdLine, &num_args);
+    LPWSTR* argv = CommandLineToArgvW((LPCWSTR) lpCmdLine, &num_args);
 
 
-    CPU cpu;
-    cpu.PC = 0;
-    uint8_t memory[0x10000] = {0};
-    uint8_t bootstrap_rom[0x100] = {0};
-    Gameboy gb = {&cpu, memory, bootstrap_rom, 0, 0, 0};
+    // CPU cpu;
+    // cpu.PC = 0;
+    // uint8_t memory[0x10000] = {0};
+    // uint8_t bootstrap_rom[0x100] = {0};
+    Gameboy* gb = gameboy_create();
 
     FILE* rom_fp = fopen("../ROMS/drmario.gb", "rb");
     if (num_args == 1) {
-        rom_fp = fopen(argv[0], "rb");
+        rom_fp = fopen((char*) argv[0], "rb");
     }
     FILE* boostrap_fp = fopen("./DMG_ROM.bin", "rb");
 
-    gameboy_load_rom(&gb, rom_fp);
-    gameboy_load_bootstrap(&gb, boostrap_fp);
+    gameboy_load_rom(gb, rom_fp);
+    gameboy_load_bootstrap(gb, boostrap_fp);
 
     fclose(rom_fp);
     fclose(boostrap_fp);
@@ -219,7 +219,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
         if ((((t2.QuadPart - t1.QuadPart) * 1000.0) / frequency.QuadPart) > 15) {
             QueryPerformanceCounter(&t1);
-            gameboy_single_frame_update(&gb, buttons, render_buffer.pixels);
+            gameboy_single_frame_update(gb, buttons, render_buffer.pixels);
 
             // Render
             window_render(hdc);
@@ -238,8 +238,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         // Sleep(16);
         i++;
     }
+
+    printf("Memory dump:\n");
     for (uint16_t i = 0xFE00; i <= 0xFE9F; i++) {
-        printf("$%.2x\n", memory[i]);
+        printf("$%.2x\n", gb->memory[i]);
     }
+
+    gameboy_destroy(gb);
     return 0;
 }

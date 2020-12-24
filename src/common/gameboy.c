@@ -29,6 +29,40 @@ static const uint16_t timer_thresholds[4] = {
     CPU_FREQUENCY/16384,
 };
 
+/** Allocates and creates a new Gameboy struct.
+ *  
+ * @return A pointer to the Gameboy struct created.
+*/
+Gameboy* gameboy_create(void) {
+    Gameboy* gb = malloc(sizeof(Gameboy));
+
+    gb->cpu = malloc(sizeof(CPU));
+    gb->cpu->PC = 0;
+
+    gb->memory = malloc(0x10000);
+    gb->bootstrap_rom = malloc(0x100);
+    gb->cartridge_rom = malloc(0x8000);
+
+    gb->int_master_enable = 0;
+    gb->timer_counter = 0;
+    gb->divider_counter = 0;
+    return gb;
+}
+
+/** Frees all memory used by the Gameboy.
+ *  
+ * @param gb Gameboy to destroy.
+ * @return A pointer to the Gameboy struct created.
+*/
+void gameboy_destroy(Gameboy* gb) {
+    free(gb->cpu);
+    free(gb->memory);
+    free(gb->bootstrap_rom);
+    free(gb->cartridge_rom);
+
+    free(gb);
+}
+
 uint8_t gameboy_fetch_instruction(Gameboy* gb) {
     return memory_get8(gb, gb->cpu->PC++);
 }
