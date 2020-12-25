@@ -163,14 +163,15 @@ void screen_update_sprites(uint8_t* gb_memory, uint8_t* frame_buffer) {
             uint8_t data2 = gb_memory[data_address+1];
 
             for (int8_t sprite_x = 7; sprite_x >= 0; sprite_x--) {
+                int8_t color_bit = sprite_x;
                 if (attributes & (1 << 5)) {
-                    sprite_x = 7 - sprite_x;
+                    color_bit = 7 - color_bit;
                 }
 
-                uint8_t color_num = (((data2 >> sprite_x) & 0x01) << 1) | ((data1 >> sprite_x) & 0x01);
+                uint8_t color_num = (((data2 >> color_bit) & 0x01) << 1) | ((data1 >> color_bit) & 0x01);
                 uint16_t pallet_address = attributes & (1 << 4) ? 0xFF49 : 0xFF48;
                 uint8_t color = (pallet_bitmask_map[color_num] & gb_memory[pallet_address]) >> (color_num * 2);
-                
+
                 if (color_num == WHITE) {
                     continue;
                 }
@@ -180,7 +181,7 @@ void screen_update_sprites(uint8_t* gb_memory, uint8_t* frame_buffer) {
                 if ((scanline_pos > 143) || x > 159) {
                     continue;
                 }
-                
+
                 switch (color) {
                     case WHITE:
                         frame_buffer[3*(scanline_pos*160+x)] = 255;
