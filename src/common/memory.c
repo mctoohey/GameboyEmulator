@@ -82,7 +82,7 @@ void memory_set8(Gameboy* gb, uint16_t address, uint8_t value) {
         gb->memory[address] = (value & 0xF0) | (gb->memory[address] & 0x0F);
     } else if (address == 0xFF46) {
         memory_dma_transfer(gb, value);
-    } else if (address = 0xFF44) {
+    } else if (address == 0xFF44) {
         gb->memory[0xFF44] = 0;     // Reset scanline.
     } else {
         gb->memory[address] = value;

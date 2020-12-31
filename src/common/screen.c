@@ -213,8 +213,60 @@ void screen_update_sprites(uint8_t* gb_memory, uint8_t* frame_buffer) {
 }
 
 
-void screen_scanline_update(uint8_t* gb_memory, uint8_t* frame_buffer) {
+void screen_update_status(uint8_t* gb_memory) {
     uint8_t lcd_control = gb_memory[0xFF40];
+
+    if (!(lcd_control & (1 << 7))) {
+        gb_memory[0xFF44] = 0;
+        gb_memory[0xFF41] &= 0xFC;
+        gb_memory[0xFF41] |= 0x01;
+        return;
+    }
+
+    uint8_t current_mode = gb_memory[0xFF40] & 0x03;
+    uint8_t new_mode = 0;
+    bool generate_interupt = false;
+
+    if (gb_memory[0xFF44] >= 144) {
+        new_mode = 1;
+        gb_memory[0xFF41] &= 0xFC;
+        gb_memory[0xFF41] |= 0x01;
+        generate_interupt = gb_memory[0xFF41] & (1 << 4);
+    } else {
+        // TEMP
+        new_mode = 0;
+        gb_memory[0xFF41] &= ~(1 << 1);
+        gb_memory[0xFF41] &= ~0x01;
+        generate_interupt = gb_memory[0xFF41] & (1 << 3);
+    }
+    // TODO(mct): Other status stuff.
+
+    if (generate_interupt && (new_mode != current_mode)) {
+        gb_memory[0xFF0F] |= (1 << 1);
+    }
+
+    // Check conincidence flag
+    if (gb_memory[0xFF44] == gb_memory[0xFF45]) {
+        gb_memory[0xFF41] |= (1 << 2);
+        if (gb_memory[0xFF41] & (1 << 6)) {
+            gb_memory[0xFF0F] |= (1 << 1);
+        }
+        // gb_memory[0xFF0F] |= (1 << 1);
+    } else {
+        gb_memory[0xFF41] &= ~(1 << 2);
+    }
+}
+
+
+void screen_scanline_update(uint8_t* gb_memory, uint8_t* frame_buffer) {
+    screen_update_status(gb_memory);
+
+    uint8_t lcd_control = gb_memory[0xFF40];
+
+    // If LCD is disabled then we return.
+    if (!(lcd_control & (1 << 7))) {
+        return;
+    }
 
     if (lcd_control & 0x01) screen_update_tiles(gb_memory, frame_buffer);
     if ((lcd_control >> 1) & 0x01) screen_update_sprites(gb_memory, frame_buffer);
@@ -222,7 +274,7 @@ void screen_scanline_update(uint8_t* gb_memory, uint8_t* frame_buffer) {
     gb_memory[0xFF44] = (gb_memory[0xFF44] + 1) % 154;
 
     // V-blank interupt.
-    if (gb_memory[0xFF44] == 145) gb_memory[0xFF0f] |= 0x01;
+    if (gb_memory[0xFF44] == 145) gb_memory[0xFF0F] |= 0x01;
 
 
 }
