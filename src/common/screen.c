@@ -182,6 +182,12 @@ void screen_update_sprites(uint8_t* gb_memory, uint8_t* frame_buffer) {
                     continue;
                 }
 
+                // Handle sprite priority. Bit of a hack for now.
+                // TODO(mct): Do this properly.
+                if (attributes & (1 << 7) && frame_buffer[3*(scanline_pos*160+x)] != 255) {
+                    continue;
+                }
+
                 switch (color) {
                     case WHITE:
                         frame_buffer[3*(scanline_pos*160+x)] = 255;
