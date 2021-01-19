@@ -16,6 +16,7 @@
 
 #define BYTES_PER_BANK 0x4000
 
+// Array that stores the entrypoints of the gameboy interrupts.
 static const uint16_t interrupt_vector[5] = {
     0x0040,
     0x0048,
@@ -24,6 +25,7 @@ static const uint16_t interrupt_vector[5] = {
     0x0060
 };
 
+// Array that stores the thresholds for each timer mode in number of clock cycles. 
 static const uint16_t timer_thresholds[4] = {
     CPU_FREQUENCY/4096,
     CPU_FREQUENCY/262144,
@@ -71,25 +73,51 @@ void gameboy_destroy(Gameboy* gb) {
     free(gb);
 }
 
+/** Gets the next instruction pointed to by PC.
+ *
+ * @param gb Gameboy to operate on.
+ * @return op code of the instruction.
+*/
 uint8_t gameboy_fetch_instruction(Gameboy* gb) {
     return memory_get8(gb, gb->cpu->PC++);
 }
 
+/** Gets the next 8 bit immediate value pointed to by PC.
+ *
+ * @param gb Gameboy to operate on.
+ * @return 8 bit value of the immediate value.
+*/
 uint8_t gameboy_fetch_immediate8(Gameboy* gb) {
     return memory_get8(gb, gb->cpu->PC++);
 }
 
+/** Gets the next 16 bit immediate value pointed to by PC.
+ *
+ * @param gb Gameboy to operate on.
+ * @return 16 bit value of the immediate value.
+*/
 uint16_t gameboy_fetch_immediate16(Gameboy* gb) {
     gb->cpu->PC += 2;
     return memory_get16(gb, gb->cpu->PC-2);
 }
 
 
+/** Pushes a 16 bit value on to the gameboy's stack.
+ *
+ * @param gb Gameboy to operate on.
+ * @param value 16 bit value to push onto the stack.
+*/
 void gameboy_push16(Gameboy* gb, uint16_t value) {
     gb->cpu->SP -= 2;
     memory_set16(gb, gb->cpu->SP, value);
 }
 
+
+/** Pops a 16 bit value off the gameboy's stack.
+ *
+ * @param gb Gameboy to operate on.
+ * @return 16 bit value popped off the stack.
+*/
 uint16_t gameboy_pop16(Gameboy* gb) {
     uint16_t value = memory_get16(gb, gb->cpu->SP);
     gb->cpu->SP += 2;
@@ -97,12 +125,21 @@ uint16_t gameboy_pop16(Gameboy* gb) {
 }
 
 
+/** Services a gameboy interrupt.
+ *
+ * @param gb Gameboy to operate on.
+ * @param routine_address The address where the interrupt routine begins.
+*/
 void gameboy_service_interrupt(Gameboy* gb, uint16_t routine_address) {
     gameboy_push16(gb, gb->cpu->PC);
     gb->cpu->PC = routine_address;
 }
 
 
+/** Checks whether any interrupts have occured. If inerrupts are enabled, the interrupt is serviced.
+ *
+ * @param gb Gameboy to operate on.
+*/
 void gameboy_check_interrupts(Gameboy* gb) {
     if (!gb->int_master_enable) {
         return;
@@ -120,11 +157,21 @@ void gameboy_check_interrupts(Gameboy* gb) {
 }
 
 
+/** Loads the bootstrap from specified file into the gameboy emulator's bootstrap ROM memory.
+ * 
+ * @param gb Gameboy to operate on.
+ * @param fp Pointer to the FILE to load the bootstrap from.
+*/
 void gameboy_load_bootstrap(Gameboy* gb, FILE* fp) {
     fread(gb->bootstrap_rom, 1, 0x100, fp);
 }
 
 
+/** Loads a ROM from the specified file into the gameboy emulator's cartridge ROM memory.
+ *
+ * @param gb Gameboy to operate on.
+ * @param fp Pointer to the File to load the cartridge ROM from.
+*/
 void gameboy_load_rom(Gameboy* gb, FILE* fp) {
     free(gb->cartridge_rom);
     gb->cartridge_rom = malloc(0x8000);
@@ -191,6 +238,11 @@ void gameboy_load_rom(Gameboy* gb, FILE* fp) {
 }
 
 
+/** Enter an infinte loop that reads and executes instructions from the ROM.
+ *  Should only be used for testing, does not handle timers, interrupts or display.
+ *
+ *  @param gb The Gameboy to operate on.
+*/
 void gameboy_execution_loop(Gameboy* gb) {
     uint8_t instruction;
     uint32_t i = 0;

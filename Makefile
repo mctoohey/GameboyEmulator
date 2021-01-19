@@ -18,6 +18,7 @@ MAIN_DIR = $(SRC_DIR)
 MAIN_DEPS = $(COMMON_DIR)/gameboy.h $(COMMON_DIR)/cpu.h
 EXECUTABLE = gbc
 
+COPY_BTLDR_CMD = cp DMG_ROM.bin build/bin
 # Windows
 ifeq ($(OS),Windows_NT)
 	EXECUTABLE = gbc.exe
@@ -26,6 +27,7 @@ ifeq ($(OS),Windows_NT)
 	MAIN_DEPS = $(COMMON_DIR)/gameboy.h $(COMMON_DIR)/cpu.h
 	CFLAGS += -mwindows
 	CLEAN_CMD = del /Q build\obj\* && del /Q build\bin\*
+	COPY_BTLDR_CMD = copy DMG_ROM.bin build\bin 
 endif
 
 
@@ -59,8 +61,7 @@ $(BIN_DIR)/$(EXECUTABLE): $(OBJ_DIR)/$(MAIN).o $(OBJ_DIR)/gameboy.o $(OBJ_DIR)/c
 
 # Copy bootloader rom.
 $(BIN_DIR)/DMG_ROM.bin: DMG_ROM.bin
-	copy DMG_ROM.bin build\bin
-
+	$(COPY_BTLDR_CMD)
 
 # Target: clean project.
 .PHONY: clean

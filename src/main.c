@@ -13,7 +13,7 @@ int main(void) {
     Gameboy gb = {&cpu, memory, bootstrap_rom};
 
     FILE* rom_fp = fopen("../../ROMS/tetris.gb", "rb");
-    FILE* boostrap_fp = fopen("DMG_ROM.bin", "rb");
+    FILE* boostrap_fp = fopen("build/bin/DMG_ROM.bin", "rb");
 
     gameboy_load_rom(&gb, rom_fp);
     gameboy_load_bootstrap(&gb, boostrap_fp);

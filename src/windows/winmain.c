@@ -9,7 +9,7 @@
 #define WIDTH 160
 #define HEIGHT 144
 
-#define SCALE 2
+#define SCALE 3
 
 typedef struct {
     uint16_t width, height;
